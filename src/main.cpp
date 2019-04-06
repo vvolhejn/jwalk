@@ -33,6 +33,7 @@ using namespace irrklang;
 using namespace std::chrono;
 
 const float SLEEP_TIME = 0.01f;
+const int ENTER_KEY = 10;
 
 void sleepSeconds(float t) {
     usleep(useconds_t(t * 1e6));
@@ -48,25 +49,30 @@ int main(int argc, const char** argv) {
     Game game(engine);
 
     auto time_prev = steady_clock::now();
+    bool action = false;
 
     while(true) {
         auto time_now = steady_clock::now();
         float secs = duration_cast<nanoseconds>(time_now - time_prev).count() / 1e9;
         time_prev = time_now;
 
-        if (secs> SLEEP_TIME * 2) {
+        if (secs > SLEEP_TIME * 2) {
             std::cerr << "Warning: slept for " << secs
                 << " instead of " << SLEEP_TIME << std::endl;
         }
 
-        game.step(secs);
+        game.step(secs, action);
+        action = false;
 
         sleepSeconds(SLEEP_TIME);
 //        sleepSomeTime();
 
         if (kbhit()) {
             int key = getch();
-            if (key == 'q') {
+//            std::cout << key << std::endl;
+            if (key == ENTER_KEY) {
+                action = true;
+            } else if (key == 'q') {
                 break;
             }
         }
