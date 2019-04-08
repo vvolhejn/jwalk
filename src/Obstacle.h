@@ -13,21 +13,29 @@ class Obstacle {
     float _vx; // x velocity
     irrklang::ISound *_main_sound, *_warning_sound;
     float _fadeout = 0;
+    int _index;
 
     void move(float dt, size_t row);
 
     float getTimeToReachEdge();
 
-public:
-    Obstacle();
+    float getTimeToReachCenter();
 
-    Obstacle(irrklang::ISound *main_sound, irrklang::ISound *warning_sound, float x, float vx);
+public:
+    Obstacle(int index);
+
+    Obstacle(irrklang::ISound *main_sound, irrklang::ISound *warning_sound,
+             float x, float vx, int index);
 
     ~Obstacle();
 
     void step(float dt, size_t row);
 
     float getX() const;
+
+    int getIndex() const;
+
+    bool isFree() const;
 
     void setFadeout(float fadeout);
 };

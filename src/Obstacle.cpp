@@ -12,12 +12,19 @@
 using irrklang::vec3df;
 using irrklang::ISound;
 
-Obstacle::Obstacle(ISound *main_sound, ISound *warning_sound, float x, float vx)
-    : _main_sound(main_sound), _warning_sound(warning_sound), _x(x), _vx(vx), _free(false) {
+Obstacle::Obstacle(ISound *main_sound, ISound *warning_sound, float x, float vx, int index)
+    : _main_sound(main_sound), _warning_sound(warning_sound),
+      _x(x), _vx(vx), _free(false), _index(index) {
 }
 
-Obstacle::Obstacle()
-    : _free(true), _x(EDGE_DISTANCE), _main_sound(nullptr), _warning_sound(nullptr) {
+Obstacle::Obstacle(int index)
+    : _free(true), _x(EDGE_DISTANCE), _main_sound(nullptr), _warning_sound(nullptr), _index(index) {
+    if (_main_sound) {
+        _main_sound->setVolume(0);
+    }
+    if (_warning_sound) {
+        _warning_sound->setVolume(0);
+    }
 }
 
 Obstacle::~Obstacle() {
@@ -41,6 +48,17 @@ float Obstacle::getTimeToReachEdge() {
     return (EDGE_DISTANCE - x) / vx;
 }
 
+float Obstacle::getTimeToReachCenter() {
+    // May also return negative values; -0.5 means the obstacle was in the center 0.5s ago
+    float vx = _vx;
+    float x = _x;
+    if (vx < 0) {
+        x = -x;
+        vx = -vx;
+    }
+    return - x / vx;
+}
+
 void Obstacle::step(float dt, size_t row) {
     if (_free) {
         return;
@@ -53,12 +71,27 @@ void Obstacle::step(float dt, size_t row) {
     _main_sound->setVolume(main_volume);
 
     float warning_volume = 1 - _fadeout;
-    warning_volume *= std::max(0.f, 1 - abs(_x) / WARNING_DISTANCE);
+    float time_to_center = getTimeToReachCenter();
+    if (time_to_center > 0) {
+        warning_volume *= std::max(0.f, 1 - time_to_center / WARNING_TIME_BEFORE);
+    } else {
+        // The obstacle has passed the center.
+        warning_volume *= std::max(0.f, 1 + time_to_center / WARNING_TIME_AFTER);
+    }
+
     _warning_sound->setVolume(warning_volume);
+}
+
+int Obstacle::getIndex() const {
+    return _index;
 }
 
 float Obstacle::getX() const {
     return _x;
+}
+
+bool Obstacle::isFree() const {
+    return _free;
 }
 
 void Obstacle::setFadeout(float fadeout) {

@@ -22,15 +22,36 @@ const std::vector<std::string> WARNING_SOUND_FILES = {
     "h2_4_dist.wav",
 };
 
+const std::vector<std::string> LOSS_SOUND_FILES = {
+    "a4_dist.wav",
+    "e4_dist.wav",
+    "h2_dist.wav",
+};
+
+const std::vector<std::string> ACTION_SOUND_FILES = {
+    "a1.wav",
+    "e1.wav",
+    "h0.wav",
+    "bea.wav",
+};
+
+const std::string SAFETY_SOUND_FILE = "safety.wav";
+
 //////////////////// Game constants ////////////////////
 const int32_t SEED = 123;
 const size_t N_OBSTACLES = 3;
 const float COLLISION_DISTANCE = 1;
-const float WARNING_DISTANCE = 7; // How close must an obstacle be to start playing a warning sound?
+const float WARNING_TIME_BEFORE = 4;
+const float WARNING_TIME_AFTER = 2;
 const float DISTANCE_BETWEEN_ROWS = 10;
 const float ACTION_DURATION = 0.8; // How long it takes to advance to the next rows
 const float EDGE_DISTANCE = 20; // Position of the edge at which sounds return from the other side
+
+//////////////////// Sound constants ////////////////////
 // Begin fading out an obstacle when it will reach the edge in this time
-const float EDGE_FADEOUT_TIME = 1;
+const float EDGE_FADEOUT_TIME = 2;
+const float ACTION_VOLUME = 0.3;
+const float SAFETY_VOLUME = 0.1;
+const float LOSS_VOLUME = 0.13;
 
 #endif //JWALK_CONSTANTS_H

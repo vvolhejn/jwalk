@@ -14,14 +14,17 @@
 #include "Obstacle.h"
 
 // Value of _time_since_action_start if no action is taking place
-const float NO_ACTION = -1;
+//const float NO_ACTION = -1;
 
 class Game {
     irrklang::ISoundEngine *_sound_engine;
     std::vector<irrklang::ISoundSource *> _sound_sources;
     std::vector<std::unique_ptr<Obstacle>> _obstacles;
+    irrklang::ISound *_safety_sound;
     float _time_since_action_start;
+    bool _action_in_progress;
     int _level;
+    int _row;
     std::mt19937 _rng;
     bool _game_over;
 
@@ -32,6 +35,8 @@ class Game {
     void startNewLevel();
 
     void lose();
+
+    void updateSafetyVolume();
 
 public:
     Game(irrklang::ISoundEngine *sound_engine);
