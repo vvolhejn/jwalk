@@ -10,19 +10,24 @@
 #include "Constants.h"
 
 using irrklang::vec3df;
+using irrklang::ISound;
 
-Obstacle::Obstacle(irrklang::ISound *sound, float x, float vx)
-    : _sound(sound), _x(x), _vx(vx), _free(false) {
+Obstacle::Obstacle(ISound *main_sound, ISound *warning_sound, float x, float vx)
+    : _main_sound(main_sound), _warning_sound(warning_sound), _x(x), _vx(vx), _free(false) {
 }
 
 Obstacle::Obstacle()
-    : _free(true), _x(EDGE_DISTANCE), _sound(nullptr) {
+    : _free(true), _x(EDGE_DISTANCE), _main_sound(nullptr), _warning_sound(nullptr) {
 }
 
 Obstacle::~Obstacle() {
-    if (_sound) {
-        _sound->stop();
-        _sound->drop();
+    if (_main_sound) {
+        _main_sound->stop();
+        _main_sound->drop();
+    }
+    if (_warning_sound) {
+        _warning_sound->stop();
+        _warning_sound->drop();
     }
 }
 
@@ -42,10 +47,14 @@ void Obstacle::step(float dt, size_t row) {
     }
     move(dt, row);
 
-    float volume = 1 - _fadeout;
+    float main_volume = 1 - _fadeout;
     // Fade out when near the edge to prevent the sound from "jumping"
-    volume *= std::min(1.f, getTimeToReachEdge() / EDGE_FADEOUT_TIME);
-    _sound->setVolume(volume);
+    main_volume *= std::min(1.f, getTimeToReachEdge() / EDGE_FADEOUT_TIME);
+    _main_sound->setVolume(main_volume);
+
+    float warning_volume = 1 - _fadeout;
+    warning_volume *= std::max(0.f, 1 - abs(_x) / WARNING_DISTANCE);
+    _warning_sound->setVolume(warning_volume);
 }
 
 float Obstacle::getX() const {
@@ -66,5 +75,6 @@ void Obstacle::move(float dt, size_t row) {
     }
     float y = DISTANCE_BETWEEN_ROWS * (row + 1);
     vec3df pos3d(_x, 0, y);
-    _sound->setPosition(pos3d);
+    _main_sound->setPosition(pos3d);
+    _warning_sound->setPosition(pos3d);
 }

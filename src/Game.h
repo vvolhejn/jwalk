@@ -19,7 +19,6 @@ const float NO_ACTION = -1;
 class Game {
     irrklang::ISoundEngine *_sound_engine;
     std::vector<irrklang::ISoundSource *> _sound_sources;
-    std::vector<irrklang::ISound *> _warning_sounds;
     std::vector<std::unique_ptr<Obstacle>> _obstacles;
     float _time_since_action_start;
     int _level;

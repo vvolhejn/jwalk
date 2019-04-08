@@ -14,9 +14,6 @@
 using irrklang::vec3df;
 
 Game::~Game() {
-    for (auto *sound : _warning_sounds) {
-        sound->drop();
-    }
     if (_sound_engine) {
         _sound_engine->drop();
     }
@@ -44,15 +41,26 @@ void Game::startNewLevel() {
     _obstacles.push_back(std::make_unique<Obstacle>());
 
     for (int i = 0; i < N_OBSTACLES; ++i) {
-        irrklang::ISound *music = _sound_engine->play3D(
-            _sound_sources[i],
+        irrklang::ISound *main_sound = _sound_engine->play3D(
+            (SOUND_DIR + OBSTACLE_SOUND_FILES[i]).c_str(),
             vec3df(0, 0, 0),
             true, false, true
         );
 
-        if (!music) {
+        if (!main_sound) {
             throw std::runtime_error("Couldn't load sound: " +
-                                     std::string(_sound_sources[i]->getName()));
+                                     std::string(OBSTACLE_SOUND_FILES[i]));
+        }
+
+        irrklang::ISound *warning_sound = _sound_engine->play3D(
+            (SOUND_DIR + WARNING_SOUND_FILES[i]).c_str(),
+            vec3df(0, 0, 0),
+            true, false, true
+        );
+
+        if (!warning_sound) {
+            throw std::runtime_error("Couldn't load sound: " +
+                                     std::string(WARNING_SOUND_FILES[i]));
         }
 
         std::uniform_real_distribution<double> x_distribution(
@@ -66,7 +74,7 @@ void Game::startNewLevel() {
             vx = -vx;
         }
 
-        _obstacles.push_back(std::make_unique<Obstacle>(music, x, vx));
+        _obstacles.push_back(std::make_unique<Obstacle>(main_sound, warning_sound, x, vx));
     }
 }
 
@@ -104,28 +112,8 @@ void Game::step(float dt, bool action) {
 
     for (size_t i = 0; i < _obstacles.size(); ++i) {
         _obstacles[i]->step(dt, i);
-
-        // Play warnings
-        if (i < WARNING_SOUND_FILES.size()) {
-            if (abs(_obstacles[i]->getX()) < WARNING_DISTANCE) {
-                vec3df pos3d(_obstacles[i]->getX(), 0, DISTANCE_BETWEEN_ROWS);
-                _warning_sounds[i]->setPosition(pos3d);
-                float volume = 1 - abs(_obstacles[i]->getX()) / WARNING_DISTANCE;
-                if (i == 0) {
-                    // Fade out the warning of the obstacle which is about to disappear
-                    volume *= 1 - action_progress;
-                }
-                _warning_sounds[i]->setVolume(volume);
-            } else {
-                _warning_sounds[i]->setVolume(0);
-            }
-        }
     }
 
-    // In case there are more warnings than obstacles, disable the extra warnings
-    for (size_t i = _obstacles.size(); i < _warning_sounds.size(); i++) {
-        _warning_sounds[i]->setVolume(0);
-    }
 
     // Lose when there is a collision with the first obstacle, or also with the second if we're
     // in a transition
@@ -138,8 +126,7 @@ void Game::step(float dt, bool action) {
 }
 
 void Game::loadSounds() {
-    // Obstacles
-    for (const std::string &name : OBSTACLE_SOUND_FILES) {
+    auto loadSoundSource = [&](const std::string &name) {
         auto *sound_source = _sound_engine->addSoundSourceFromFile(
             (SOUND_DIR + name).c_str(),
             irrklang::ESM_AUTO_DETECT,
@@ -148,23 +135,17 @@ void Game::loadSounds() {
         if (!sound_source) {
             throw std::runtime_error("Couldn't load sound source: " + name);
         }
+        return sound_source;
+    };
+    // Obstacles
+    for (const std::string &name : OBSTACLE_SOUND_FILES) {
+        auto *sound_source = loadSoundSource(name);
         _sound_sources.push_back(sound_source);
     }
 
-    // Warnings
     for (const std::string &name : WARNING_SOUND_FILES) {
-        // start paused
-        irrklang::ISound *sound = _sound_engine->play3D(
-            (SOUND_DIR + name).c_str(),
-            vec3df(0, 0, 10),
-            true, true, true
-        );
-        if (!sound) {
-            throw std::runtime_error("Couldn't load sound: " + name);
-        }
-        sound->setVolume(0);
-        sound->setIsPaused(false);
-        _warning_sounds.push_back(sound);
+        auto *sound_source = loadSoundSource(name);
+        _sound_sources.push_back(sound_source);
     }
 }
 
@@ -178,9 +159,6 @@ void Game::finishAction() {
 void Game::lose() {
     _game_over = true;
     _obstacles.clear();
-    for (size_t i = 0; i < _warning_sounds.size(); i++) {
-        _warning_sounds[i]->setVolume(0);
-    }
 
     std::cout << "You lost! You reached level " << _level << "." << std::endl;
     std::cout << "Press Q to quit, press Enter to play again." << std::endl;

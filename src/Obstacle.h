@@ -11,7 +11,7 @@ class Obstacle {
     bool _free; // A free "obstacle" is one with no danger
     float _x;
     float _vx; // x velocity
-    irrklang::ISound *_sound;
+    irrklang::ISound *_main_sound, *_warning_sound;
     float _fadeout = 0;
 
     void move(float dt, size_t row);
@@ -21,7 +21,7 @@ class Obstacle {
 public:
     Obstacle();
 
-    Obstacle(irrklang::ISound *sound, float x, float vx);
+    Obstacle(irrklang::ISound *main_sound, irrklang::ISound *warning_sound, float x, float vx);
 
     ~Obstacle();
 
