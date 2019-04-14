@@ -12,7 +12,6 @@
 
 #include "Obstacle.h"
 
-//using irrklang::ISoundEngine;
 using irrklang::vec3df;
 using irrklang::ISound;
 
@@ -21,6 +20,7 @@ Game::~Game() {
     // Maybe because the sound engine could get destroyed sooner, causing an error
     _obstacles.clear();
 
+    // IrrKlang requires us to call drop() on all ISounds
     _safety_sound->drop();
 
     if (_sound_engine) {
@@ -32,11 +32,11 @@ Game::Game(irrklang::ISoundEngine *sound_engine)
     : _sound_engine(sound_engine),
       _time_since_action_start(0), _action_in_progress(false),
       _level(1), _row(0), _game_over(false) {
-//    _rng = std::mt19937(SEED);
     _rng = std::mt19937(time(0));
 
     loadSounds();
-//    _sound_engine->setDopplerEffectParameters(10, 1.0);
+//    The Doppler effect is not very noticeable
+//    _sound_engine->setDopplerEffectParameters(1., 10.0);
     _sound_engine->setListenerPosition(vec3df(0, 0, 0), vec3df(0, 0, 1));
 
     _safety_sound = _sound_engine->play2D(
@@ -88,6 +88,7 @@ void Game::startNewLevel() {
 void Game::step(float dt, bool action) {
     if (_game_over) {
         if (action) {
+            // Restart the game
             _level = 1;
             _game_over = false;
             startNewLevel();
@@ -100,7 +101,8 @@ void Game::step(float dt, bool action) {
         _action_in_progress = true;
         _row++;
 
-        // Play sound effect
+        // Play action sound effect
+        // Use ACTION_SOUND_FILES[0] when performing the last action of a level
         int action_sound_index = (_row > 1 && _obstacles.size() == 1) ? 0 : _row;
         ISound *action_sound = _sound_engine->play2D(
             (SOUND_DIR + ACTION_SOUND_FILES[action_sound_index]).c_str(), false, true
@@ -108,26 +110,19 @@ void Game::step(float dt, bool action) {
         action_sound->setVolume(ACTION_VOLUME);
         action_sound->setIsPaused(false);
 
-        // Cancel fade-in when an action starts, because we want to begin fading *out*
+        // Obstacles fade in when they appear, but when an action starts, we
+        // cancel fade-in because we want to begin fading *out*
         for (auto &o : _obstacles) {
             o->setVolume(1);
         }
     }
 
     _time_since_action_start += dt;
-    float action_progress = 0;
 
     if (_action_in_progress) {
-        action_progress = _time_since_action_start / ACTION_DURATION;
+        const float action_progress = _time_since_action_start / ACTION_DURATION;
         if (action_progress >= 1) {
             finishAction();
-            if (_obstacles.empty()) {
-                _level++;
-                startNewLevel();
-            } else {
-                int i = std::min(int32_t(ROW_SYMBOLS.size()) - 1, _row);
-                std::cout << ROW_SYMBOLS[i] << std::endl;
-            }
         } else {
             if (_obstacles.size()) {
                 _obstacles[0]->setVolume(1 - action_progress);
@@ -148,17 +143,17 @@ void Game::step(float dt, bool action) {
 
     // Lose when there is a collision with the first obstacle, or also with the second if we're
     // in a transition
-    int collision = -1;
+    int collided_with = -1;
     if (std::abs(_obstacles[0]->getX()) < COLLISION_DISTANCE) {
-        collision = 0;
+        collided_with = 0;
     } else if (_action_in_progress
                && _obstacles.size() > 1
                && std::abs(_obstacles[1]->getX()) < COLLISION_DISTANCE) {
-        collision = 1;
+        collided_with = 1;
     }
-    if (collision >= 0) {
+    if (collided_with >= 0) {
         ISound *loss_sound = _sound_engine->play2D(
-            (SOUND_DIR + LOSS_SOUND_FILES[_obstacles[collision]->getIndex() - 1]).c_str(),
+            (SOUND_DIR + LOSS_SOUND_FILES[_obstacles[collided_with]->getIndex() - 1]).c_str(),
             false, true
         );
         loss_sound->setVolume(LOSS_VOLUME);
@@ -169,39 +164,31 @@ void Game::step(float dt, bool action) {
 }
 
 void Game::loadSounds() {
-    auto loadSoundSource = [&](const std::string &name) {
-        auto *sound_source = _sound_engine->addSoundSourceFromFile(
-            (SOUND_DIR + name).c_str(),
-            irrklang::ESM_AUTO_DETECT,
-            true // preload the sound
-        );
-        if (!sound_source) {
-            throw std::runtime_error("Couldn't load sound source: " + name);
-        }
-        return sound_source;
-    };
-    // Obstacles
     std::set<std::string> files_to_load;
-    files_to_load.insert(SAFETY_SOUND_FILE);
 
+    files_to_load.insert(SAFETY_SOUND_FILE);
     for (const std::string &name : OBSTACLE_SOUND_FILES) {
         files_to_load.insert(name);
     }
-
     for (const std::string &name : WARNING_SOUND_FILES) {
         files_to_load.insert(name);
     }
-
     for (const std::string &name : LOSS_SOUND_FILES) {
         files_to_load.insert(name);
     }
-
     for (const std::string &name : ACTION_SOUND_FILES) {
         files_to_load.insert(name);
     }
 
     for (const std::string &name : files_to_load) {
-        auto *sound_source = loadSoundSource(name);
+        auto *sound_source = _sound_engine->addSoundSourceFromFile(
+            (SOUND_DIR + name).c_str(),
+            irrklang::ESM_AUTO_DETECT,
+            true // true = preload the sound
+        );
+        if (!sound_source) {
+            throw std::runtime_error("Couldn't load sound source: " + name);
+        }
         _sound_sources.push_back(sound_source);
     }
 }
@@ -210,6 +197,15 @@ void Game::finishAction() {
     _action_in_progress = false;
     assert(!_obstacles.empty());
     _obstacles.erase(_obstacles.begin());
+
+    if (_obstacles.empty()) {
+        _level++;
+        startNewLevel();
+    } else {
+        // In case we run out of row symbols, just use the last one
+        int i = std::min(int32_t(ROW_SYMBOLS.size()) - 1, _row);
+        std::cout << ROW_SYMBOLS[i] << std::endl;
+    }
 }
 
 void Game::lose() {

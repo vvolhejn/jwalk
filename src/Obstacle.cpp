@@ -49,7 +49,6 @@ float Obstacle::getTimeToReachEdge() {
 }
 
 float Obstacle::getTimeToReachCenter() {
-    // May also return negative values; -0.5 means the obstacle was in the center 0.5s ago
     float vx = _vx;
     float x = _x;
     if (vx < 0) {
@@ -94,8 +93,14 @@ void Obstacle::move(float dt, size_t row) {
     vec3df pos3d(_x, 0, y);
     _main_sound->setPosition(pos3d);
     _warning_sound->setPosition(pos3d);
+
+    // Velocities are used for the Doppler effect - currently disabled, though
+    vec3df v3d(_vx, 0, 0);
+    _main_sound->setVelocity(v3d);
+    _warning_sound->setVelocity(v3d);
 }
 
+// Returns a float from 0 to 1 specifying how fast the obstacles in the current level should be
 float getDifficulty(int level) {
     int levels_since_new_obstacle = 0;
     for (int l : MIN_LEVEL_FOR_OBSTACLE) {

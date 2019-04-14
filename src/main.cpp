@@ -1,18 +1,12 @@
-// This example will show how to play sounds in 3D space using irrKlang.
-// An mp3 file file be played in 3D space and moved around the user and a
-// sound will be played at a random 3D position every time the user presses
-// a key.
+//
+// Created by Vaclav Volhejn on 2019-03-10.
+//
 
-// For this example, we need some function to sleep for some seconds,
-// so we include the platform specific sleep functions here. This is
-// only need for demo purposes and has nothing to do with sound output.
-// include console I/O methods (conio.h for windows, our wrapper in linux)
 #if defined(WIN32)
 #include <windows.h>
 #include <conio.h>
-inline void sleepSomeTime() { Sleep(100); }
 #else
-#include "../lib/irrKlang-64bit-1.6.0/examples/common/conio.h"
+#include "conio.h"
 #endif
 
 // Lets start: include the irrKlang headers and other input/output stuff
@@ -43,7 +37,8 @@ int main(int argc, const char** argv) {
     ISoundEngine* engine = createIrrKlangDevice();
 
     if (!engine) {
-        return 0; // error starting up the engine
+        // There was an error starting up the engine
+        return 0;
     }
 
     Game game(engine);
@@ -65,11 +60,9 @@ int main(int argc, const char** argv) {
         action = false;
 
         sleepSeconds(SLEEP_TIME);
-//        sleepSomeTime();
 
         if (kbhit()) {
             int key = getch();
-//            std::cout << key << std::endl;
             if (key == ENTER_KEY) {
                 action = true;
             } else if (key == 'q') {
