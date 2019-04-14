@@ -56,7 +56,7 @@ float Obstacle::getTimeToReachCenter() {
         x = -x;
         vx = -vx;
     }
-    return - x / vx;
+    return -x / vx;
 }
 
 void Obstacle::step(float dt, size_t row) {
@@ -110,4 +110,33 @@ void Obstacle::move(float dt, size_t row) {
     vec3df pos3d(_x, 0, y);
     _main_sound->setPosition(pos3d);
     _warning_sound->setPosition(pos3d);
+}
+
+float getDifficulty(int level) {
+    int levels_since_new_obstacle = 0;
+    for (int l : MIN_LEVEL_FOR_OBSTACLE) {
+        if (level >= l) {
+            levels_since_new_obstacle = std::max(level - l, levels_since_new_obstacle);
+        }
+    }
+    return std::min(levels_since_new_obstacle * 0.05f, 1.f);
+}
+
+void Obstacle::randomizePosition(std::mt19937 &rng, int level) {
+    std::uniform_real_distribution<float> x_distribution(0, EDGE_DISTANCE * 0.75);
+    float min_v, max_v;
+    float d = getDifficulty(level);
+    min_v = 2 + 5 * d;
+    max_v = 2 + 10 * d;
+    std::uniform_real_distribution<float> vx_distribution(-min_v, -max_v);
+    _x = x_distribution(rng);
+    _vx = vx_distribution(rng);
+//    std::cerr << "vx: " << _vx << std::endl;
+
+    if (rng() % 2) {
+        _x = -_x;
+    }
+    if (rng() % 2) {
+        _vx = -_vx;
+    }
 }

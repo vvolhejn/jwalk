@@ -17,6 +17,10 @@ using irrklang::vec3df;
 using irrklang::ISound;
 
 Game::~Game() {
+    // It seems it is necessary for the obstacles' destructors to be called first
+    // Maybe because the sound engine could get destroyed sooner, causing an error
+    _obstacles.clear();
+
     _safety_sound->drop();
 
     if (_sound_engine) {
@@ -45,60 +49,38 @@ Game::Game(irrklang::ISoundEngine *sound_engine)
     startNewLevel();
 }
 
+
 void Game::startNewLevel() {
     assert(_obstacles.empty());
     std::cerr << "Starting new level" << std::endl;
     _row = 0;
 
-    // Start with a free obstacle (no danger)
+    // Start with a "free" obstacle (no danger)
     _obstacles.push_back(std::make_unique<Obstacle>(0));
 
+    auto playSound = [&](const std::string &filename) {
+        ISound *sound = _sound_engine->play3D(
+            (SOUND_DIR + filename).c_str(),
+            vec3df(0, 0, 0),
+            true, false, true
+        );
+        if (!sound) {
+            throw std::runtime_error("Couldn't load sound: " +
+                                     std::string(filename));
+        }
+        return sound;
+    };
+
     for (int i = 0; i < N_OBSTACLES; ++i) {
-        ISound *main_sound = _sound_engine->play3D(
-            (SOUND_DIR + OBSTACLE_SOUND_FILES[i]).c_str(),
-            vec3df(0, 0, 0),
-            true, false, true
-        );
-
-        if (!main_sound) {
-            throw std::runtime_error("Couldn't load sound: " +
-                                     std::string(OBSTACLE_SOUND_FILES[i]));
+        if (_level < MIN_LEVEL_FOR_OBSTACLE[i]) {
+            break;
         }
 
-        ISound *warning_sound = _sound_engine->play3D(
-            (SOUND_DIR + WARNING_SOUND_FILES[i]).c_str(),
-            vec3df(0, 0, 0),
-            true, false, true
-        );
+        ISound *main_sound = playSound(OBSTACLE_SOUND_FILES[i]);
+        ISound *warning_sound = playSound(WARNING_SOUND_FILES[i]);
 
-        if (!warning_sound) {
-            throw std::runtime_error("Couldn't load sound: " +
-                                     std::string(WARNING_SOUND_FILES[i]));
-        }
-
-        ISound *loss_sound = _sound_engine->play3D(
-            (SOUND_DIR + WARNING_SOUND_FILES[i]).c_str(),
-            vec3df(0, 0, 0),
-            false, true, true
-        );
-
-        if (!warning_sound) {
-            throw std::runtime_error("Couldn't load sound: " +
-                                     std::string(LOSS_SOUND_FILES[i]));
-        }
-
-        std::uniform_real_distribution<double> x_distribution(
-            EDGE_DISTANCE * 0.5, EDGE_DISTANCE * 0.75);
-        std::uniform_real_distribution<double> vx_distribution(-1, -3);
-        float x = x_distribution(_rng);
-        float vx = vx_distribution(_rng);
-
-        if (_rng() % 2) {
-            x = -x;
-            vx = -vx;
-        }
-
-        _obstacles.push_back(std::make_unique<Obstacle>(main_sound, warning_sound, x, vx, i + 1));
+        _obstacles.push_back(std::make_unique<Obstacle>(main_sound, warning_sound, 0, 0, i + 1));
+        _obstacles.back()->randomizePosition(_rng, _level);
     }
 }
 
@@ -118,8 +100,9 @@ void Game::step(float dt, bool action) {
         _row++;
 
         // Play sound effect
+        int action_sound_index = (_row > 1 && _obstacles.size() == 1) ? 0 : _row;
         ISound *action_sound = _sound_engine->play2D(
-            (SOUND_DIR + ACTION_SOUND_FILES[_row - 1]).c_str(), false, true
+            (SOUND_DIR + ACTION_SOUND_FILES[action_sound_index]).c_str(), false, true
         );
         action_sound->setVolume(ACTION_VOLUME);
         action_sound->setIsPaused(false);
@@ -161,7 +144,8 @@ void Game::step(float dt, bool action) {
     }
     if (collision >= 0) {
         ISound *loss_sound = _sound_engine->play2D(
-            (SOUND_DIR + LOSS_SOUND_FILES[_obstacles[collision]->getIndex() - 1]).c_str(), false, true
+            (SOUND_DIR + LOSS_SOUND_FILES[_obstacles[collision]->getIndex() - 1]).c_str(),
+            false, true
         );
         loss_sound->setVolume(LOSS_VOLUME);
         loss_sound->setIsPaused(false);

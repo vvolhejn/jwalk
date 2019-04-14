@@ -5,6 +5,8 @@
 #ifndef JWALK_OBSTACLE_H
 #define JWALK_OBSTACLE_H
 
+#include <random>
+
 #include <irrKlang.h>
 
 class Obstacle {
@@ -38,6 +40,8 @@ public:
     bool isFree() const;
 
     void setFadeout(float fadeout);
+
+    void randomizePosition(std::mt19937 &rng, int level);
 };
 
 
