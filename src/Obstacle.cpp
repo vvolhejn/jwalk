@@ -65,12 +65,12 @@ void Obstacle::step(float dt, size_t row) {
     }
     move(dt, row);
 
-    float main_volume = 1 - _fadeout;
+    float main_volume = _volume;
     // Fade out when near the edge to prevent the sound from "jumping"
     main_volume *= std::min(1.f, getTimeToReachEdge() / EDGE_FADEOUT_TIME);
     _main_sound->setVolume(main_volume);
 
-    float warning_volume = 1 - _fadeout;
+    float warning_volume = _volume;
     float time_to_center = getTimeToReachCenter();
     if (time_to_center > 0) {
         warning_volume *= std::max(0.f, 1 - time_to_center / WARNING_TIME_BEFORE);
@@ -80,22 +80,6 @@ void Obstacle::step(float dt, size_t row) {
     }
 
     _warning_sound->setVolume(warning_volume);
-}
-
-int Obstacle::getIndex() const {
-    return _index;
-}
-
-float Obstacle::getX() const {
-    return _x;
-}
-
-bool Obstacle::isFree() const {
-    return _free;
-}
-
-void Obstacle::setFadeout(float fadeout) {
-    _fadeout = std::min(1.f, std::max(0.f, fadeout));
 }
 
 void Obstacle::move(float dt, size_t row) {
@@ -139,4 +123,24 @@ void Obstacle::randomizePosition(std::mt19937 &rng, int level) {
     if (rng() % 2) {
         _vx = -_vx;
     }
+}
+
+int Obstacle::getIndex() const {
+    return _index;
+}
+
+float Obstacle::getX() const {
+    return _x;
+}
+
+bool Obstacle::isFree() const {
+    return _free;
+}
+
+void Obstacle::setVolume(float volume) {
+    _volume = std::min(1.f, std::max(0.f, volume));
+}
+
+float Obstacle::getVolume() {
+    return _volume;
 }

@@ -14,7 +14,7 @@ class Obstacle {
     float _x;
     float _vx; // x velocity
     irrklang::ISound *_main_sound, *_warning_sound;
-    float _fadeout = 0;
+    float _volume = 1;
     int _index;
 
     void move(float dt, size_t row);
@@ -39,7 +39,9 @@ public:
 
     bool isFree() const;
 
-    void setFadeout(float fadeout);
+    void setVolume(float volume);
+
+    float getVolume();
 
     void randomizePosition(std::mt19937 &rng, int level);
 };

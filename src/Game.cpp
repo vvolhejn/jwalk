@@ -52,7 +52,7 @@ Game::Game(irrklang::ISoundEngine *sound_engine)
 
 void Game::startNewLevel() {
     assert(_obstacles.empty());
-    std::cerr << "Starting new level" << std::endl;
+    std::cout << ROW_SYMBOLS[0] << " " << _level << std::endl;
     _row = 0;
 
     // Start with a "free" obstacle (no danger)
@@ -81,6 +81,7 @@ void Game::startNewLevel() {
 
         _obstacles.push_back(std::make_unique<Obstacle>(main_sound, warning_sound, 0, 0, i + 1));
         _obstacles.back()->randomizePosition(_rng, _level);
+        _obstacles.back()->setVolume(0);
     }
 }
 
@@ -106,6 +107,11 @@ void Game::step(float dt, bool action) {
         );
         action_sound->setVolume(ACTION_VOLUME);
         action_sound->setIsPaused(false);
+
+        // Cancel fade-in when an action starts, because we want to begin fading *out*
+        for (auto &o : _obstacles) {
+            o->setVolume(1);
+        }
     }
 
     _time_since_action_start += dt;
@@ -118,11 +124,19 @@ void Game::step(float dt, bool action) {
             if (_obstacles.empty()) {
                 _level++;
                 startNewLevel();
+            } else {
+                int i = std::min(int32_t(ROW_SYMBOLS.size()) - 1, _row);
+                std::cout << ROW_SYMBOLS[i] << std::endl;
             }
         } else {
             if (_obstacles.size()) {
-                _obstacles[0]->setFadeout(action_progress);
+                _obstacles[0]->setVolume(1 - action_progress);
             }
+        }
+    } else {
+        // Fade obstacles in
+        for (auto &o : _obstacles) {
+            o->setVolume(std::min(1.f, o->getVolume() + dt / FADEIN_TIME));
         }
     }
 
@@ -194,7 +208,6 @@ void Game::loadSounds() {
 
 void Game::finishAction() {
     _action_in_progress = false;
-    std::cout << "action finished" << std::endl;
     assert(!_obstacles.empty());
     _obstacles.erase(_obstacles.begin());
 }
