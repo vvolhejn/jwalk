@@ -30,7 +30,7 @@ const std::vector<std::string> LOSS_SOUND_FILES = {
 
 const std::vector<std::string> ACTION_SOUND_FILES = {
     "bea.wav",
-    "a1.wav", 
+    "a1.wav",
     "e1.wav",
     "h0.wav",
 };
