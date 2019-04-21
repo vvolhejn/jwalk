@@ -30,7 +30,12 @@ const float SLEEP_TIME = 0.01f;
 const int ENTER_KEY = 10;
 
 void sleepSeconds(float t) {
-    usleep(useconds_t(t * 1e6));
+    uint32_t s = t;
+    timespec tm;
+    tm.tv_sec = s;
+    tm.tv_nsec = uint32_t((t - s) * 1e9);
+
+    nanosleep(&tm, NULL);
 }
 
 int main(int argc, const char** argv) {
@@ -51,10 +56,12 @@ int main(int argc, const char** argv) {
         float secs = duration_cast<nanoseconds>(time_now - time_prev).count() / 1e9;
         time_prev = time_now;
 
+#ifdef DEBUG
         if (secs > SLEEP_TIME * 2) {
             std::cerr << "Warning: slept for " << secs
                 << " instead of " << SLEEP_TIME << std::endl;
         }
+#endif
 
         game.step(secs, action);
         action = false;

@@ -63,12 +63,15 @@ void Game::startNewLevel() {
         ISound *sound = _sound_engine->play3D(
             (SOUND_DIR + filename).c_str(),
             vec3df(0, 0, 0),
-            true, false, true
+            true, true, true
         );
         if (!sound) {
             throw std::runtime_error("Couldn't load sound: " +
                                      std::string(filename));
         }
+        // Without setting the volume here, the sound might play at volume 1 for a brief period
+        sound->setVolume(0);
+        sound->setIsPaused(false);
         return sound;
     };
 

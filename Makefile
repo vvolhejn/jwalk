@@ -2,7 +2,7 @@ all: install
 
 install: build/jwalk
 
-build/jwalk: lib/irrklang
+build/jwalk: src/* lib/irrklang
 	mkdir -p build
 	cd build && cmake ..
 	cd build && make
