@@ -3,7 +3,8 @@ project(jwalk)
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(lib/irrklang/include/)
+set(IRRKLANG_DIR ${CMAKE_SOURCE_DIR}/lib/irrKlang-64bit-1.6.0)
+include_directories(${IRRKLANG_DIR}/include/)
 
 add_executable(jwalk src/main.cpp src/Game.cpp src/Game.h src/Obstacle.cpp src/Obstacle.h src/Constants.h)
 
@@ -13,11 +14,11 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     find_package(Threads REQUIRED)
     target_link_libraries(jwalk Threads::Threads)
 
-    target_link_libraries(jwalk "${CMAKE_SOURCE_DIR}/lib/irrklang/bin/linux-gcc-64/libIrrKlang.so")
+    target_link_libraries(jwalk "${IRRKLANG_DIR}/bin/linux-gcc-64/libIrrKlang.so")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    target_link_libraries(jwalk "${CMAKE_SOURCE_DIR}/lib/irrklang/bin/macosx-gcc/libirrklang.dylib")
+    target_link_libraries(jwalk "${IRRKLANG_DIR}/bin/macosx-gcc/libirrklang.dylib")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    target_link_libraries(jwalk "${CMAKE_SOURCE_DIR}/lib/irrklang/bin/winx64-visualStudio/irrKlang.dll")
+    target_link_libraries(jwalk "${IRRKLANG_DIR}/bin/winx64-visualStudio/irrKlang.dll")
 else()
     message("Unknown system!")
 endif()

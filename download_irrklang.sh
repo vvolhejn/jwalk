@@ -8,6 +8,3 @@ mkdir lib
 cd lib/
 wget -O irrklang.zip ${url}
 unzip irrklang.zip
-# Remove the version suffix; rename to just "irrklang/"
-extracted_name=$(ls -d */)
-mv ${extracted_name} irrklang
