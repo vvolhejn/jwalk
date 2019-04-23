@@ -12,10 +12,10 @@ If everything works, the game's binary should be in `build/jwalk`. To play, run 
 
 ## Known issues
 
-- When using G++, version >=4.9 is required. If you have multiple versions and the default is too low, run something like `export CXX=g++-8`, remove `build/` and rerun `make`.
+- When using g++, version >=4.9 is required. If you have multiple versions and the default is too low, run something like `export CXX=g++-8`, replacing `g++-8` with your g++>=4.9 binary, remove `build/` and rerun `make`.
 - `nanosleep` has low resolution on Linux (probably related to [this](https://gha.st/short-sleeps/)), so the "framerate" is lower than it should be.
 - The sound sometimes crackles on Linux (ALSA sound driver). It seems to be a problem of the system or library because this happens in irrKlang's own examples (tested on example 2). The crackling typically goes away after a minute or so, and sometimes doesn't happen at all.
-- There are some memory leaks according to Valgrind, but these seem to be due to irrKlang. (They happen in irrKlang's own examples as well.) [Possibly relevant forum entry.](https://www.ambiera.com/forum.php?t=2166).
+- There are some memory leaks according to Valgrind, but these seem to be due to irrKlang. They happen in irrKlang's own examples as well. [Possibly relevant forum entry here.](https://www.ambiera.com/forum.php?t=2166).
 
 ## Architecture
 
