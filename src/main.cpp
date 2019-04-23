@@ -6,7 +6,9 @@
 #include <windows.h>
 #include <conio.h>
 #else
+
 #include "conio.h"
+
 #endif
 
 // Lets start: include the irrKlang headers and other input/output stuff
@@ -38,20 +40,25 @@ void sleepSeconds(float t) {
     nanosleep(&tm, NULL);
 }
 
-int main(int argc, const char** argv) {
-    ISoundEngine* engine = createIrrKlangDevice();
+int main(int argc, const char **argv) {
+    if ((argc > 1) && (std::string(argv[1]) == "-h")) {
+        std::cout << "Jwalk. Run with -t for a tutorial." << std::endl;
+        return 0;
+    }
+    bool tutorial = (argc > 1) && (std::string(argv[1]) == "-t");
+
+    ISoundEngine *engine = createIrrKlangDevice();
 
     if (!engine) {
         // There was an error starting up the engine
         return 0;
     }
 
-    Game game(engine);
-
+    Game game(engine, tutorial);
     auto time_prev = steady_clock::now();
     bool action = false;
 
-    while(true) {
+    while (true) {
         auto time_now = steady_clock::now();
         float secs = duration_cast<nanoseconds>(time_now - time_prev).count() / 1e9;
         time_prev = time_now;

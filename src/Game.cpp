@@ -29,10 +29,10 @@ Game::~Game() {
     }
 }
 
-Game::Game(irrklang::ISoundEngine *sound_engine)
+Game::Game(irrklang::ISoundEngine *sound_engine, bool tutorial)
     : _sound_engine(sound_engine),
       _time_since_action_start(0), _action_in_progress(false),
-      _level(1), _row(0), _game_over(false) {
+      _level(tutorial ? 0 : 1), _row(0), _game_over(false), _tutorial(tutorial) {
     _rng = std::mt19937(time(0));
 
     loadSounds();
@@ -48,6 +48,7 @@ Game::Game(irrklang::ISoundEngine *sound_engine)
     _safety_sound->setIsPaused(false);
 
     startNewLevel();
+    showTutorialMessage();
 }
 
 
@@ -107,7 +108,7 @@ void Game::step(float dt, bool action) {
 
         // Play action sound effect
         // Use ACTION_SOUND_FILES[0] when performing the last action of a level
-        int action_sound_index = (_row > 1 && _obstacles.size() == 1) ? 0 : _row;
+        int action_sound_index = (_obstacles.size() == 1) ? 0 : _row;
         ISound *action_sound = _sound_engine->play2D(
             (SOUND_DIR + ACTION_SOUND_FILES[action_sound_index]).c_str(), false, true
         );
@@ -127,6 +128,7 @@ void Game::step(float dt, bool action) {
         const float action_progress = _time_since_action_start / ACTION_DURATION;
         if (action_progress >= 1) {
             finishAction();
+            showTutorialMessage();
         } else {
             if (_obstacles.size()) {
                 _obstacles[0]->setVolume(1 - action_progress);
@@ -213,6 +215,10 @@ void Game::finishAction() {
 }
 
 void Game::lose() {
+    // Disable the tutorial once we've shown every message
+    if (TUTORIAL_MESSAGES.upper_bound({_level, _row}) == TUTORIAL_MESSAGES.end()) {
+        _tutorial = false;
+    }
     _game_over = true;
     _obstacles.clear();
     _action_in_progress = false;
@@ -220,7 +226,7 @@ void Game::lose() {
     _safety_sound->setVolume(0);
 
     std::cout << "You lost! You reached level " << _level << "." << std::endl;
-    std::cout << "Press Q to quit, press Enter to play again." << std::endl;
+    std::cout << "Press Q to quit, press ENTER to play again." << std::endl;
 }
 
 void Game::updateSafetyVolume() {
@@ -238,4 +244,12 @@ void Game::updateSafetyVolume() {
     }
     _safety_sound->setVolume(volume);
 
+}
+
+void Game::showTutorialMessage() {
+    if (_tutorial) {
+        if (TUTORIAL_MESSAGES.count({_level, _row})) {
+            std::cout << TUTORIAL_MESSAGES.at({_level, _row}) << std::endl;
+        }
+    }
 }

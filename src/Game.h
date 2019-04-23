@@ -28,6 +28,8 @@ class Game {
     std::mt19937 _rng;
     // True iff the game has ended and we are waiting if the user wants to play again
     bool _game_over;
+    // Show tutorial messages?
+    bool _tutorial;
 
     // Load the necessary sound files into memory
     void loadSounds();
@@ -43,8 +45,11 @@ class Game {
     // Fades the safety sound in and out as appropriate
     void updateSafetyVolume();
 
+    // Show a message at the appropriate level and row if the tutorial is enabled
+    void showTutorialMessage();
+
 public:
-    Game(irrklang::ISoundEngine *sound_engine);
+    Game(irrklang::ISoundEngine *sound_engine, bool tutorial);
 
     ~Game();
 
