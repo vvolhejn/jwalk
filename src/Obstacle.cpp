@@ -102,10 +102,10 @@ void Obstacle::move(float dt, size_t row) {
 
 // Returns a float from 0 to 1 specifying how fast the obstacles in the current level should be
 float getDifficulty(int level) {
-    int levels_since_new_obstacle = 0;
+    int levels_since_new_obstacle = 20;
     for (int l : MIN_LEVEL_FOR_OBSTACLE) {
         if (level >= l) {
-            levels_since_new_obstacle = std::max(level - l, levels_since_new_obstacle);
+            levels_since_new_obstacle = std::min(level - l, levels_since_new_obstacle);
         }
     }
     return std::min(levels_since_new_obstacle * 0.05f, 1.f);
