@@ -49,7 +49,8 @@ const float DISTANCE_BETWEEN_ROWS = 10;
 const float ACTION_DURATION = 0.8; // How long it takes to advance to the next rows
 const float EDGE_DISTANCE = 15; // Position of the edge at which sounds return from the other side
 // Symbols printed when an action finishes
-const std::vector<std::string> ROW_SYMBOLS = {"𝄞", "♬", "♫", "♪", "♩"};
+//const std::vector<std::string> ROW_SYMBOLS = {"𝄞", "♬", "♫", "♪", "♩"};
+const std::vector<std::string> ROW_SYMBOLS = {"Level", ".", "..", "...", "...."};
 
 //////////////////// Sound constants ////////////////////
 // Begin fading in the warning sound this many seconds before it reaches the center

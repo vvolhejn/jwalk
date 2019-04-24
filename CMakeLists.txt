@@ -6,7 +6,14 @@ set(CMAKE_CXX_STANDARD 14)
 set(IRRKLANG_DIR ${CMAKE_SOURCE_DIR}/lib/irrKlang-64bit-1.6.0)
 include_directories(${IRRKLANG_DIR}/include/)
 
-add_executable(jwalk src/main.cpp src/Game.cpp src/Game.h src/Obstacle.cpp src/Obstacle.h src/Constants.h)
+add_executable(jwalk src/main.cpp src/Game.cpp src/Game.h src/Obstacle.cpp src/Obstacle.h src/Constants.h src/IO.cpp src/IO.h)
+
+if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") OR (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin"))
+    find_package(Curses REQUIRED)
+    target_link_libraries(jwalk ${CURSES_LIBRARIES})
+    include_directories(${CURSES_INCLUDE_DIR})
+endif()
+
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     # -pthread; see https://stackoverflow.com/questions/1620918/cmake-and-libpthread

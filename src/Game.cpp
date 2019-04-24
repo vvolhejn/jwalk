@@ -12,6 +12,7 @@
 #include <cassert>
 
 #include "Obstacle.h"
+#include "IO.h"
 
 using irrklang::vec3df;
 using irrklang::ISound;
@@ -54,7 +55,7 @@ Game::Game(irrklang::ISoundEngine *sound_engine, bool tutorial)
 
 void Game::startNewLevel() {
     assert(_obstacles.empty());
-    std::cout << ROW_SYMBOLS[0] << " " << _level << std::endl;
+    IO::println(ROW_SYMBOLS[0] + " " + std::to_string(_level));
     _row = 0;
 
     // Start with a "free" obstacle (no danger)
@@ -210,7 +211,7 @@ void Game::finishAction() {
     } else {
         // In case we run out of row symbols, just use the last one
         int i = std::min(int32_t(ROW_SYMBOLS.size()) - 1, _row);
-        std::cout << ROW_SYMBOLS[i] << std::endl;
+        IO::println(ROW_SYMBOLS[i]);
     }
 }
 
@@ -225,8 +226,8 @@ void Game::lose() {
     _time_since_action_start = 0;
     _safety_sound->setVolume(0);
 
-    std::cout << "You lost! You reached level " << _level << "." << std::endl;
-    std::cout << "Press Q to quit, press ENTER to play again." << std::endl;
+    IO::println("You lost! You reached level " + std::to_string(_level) + ".");
+    IO::println("Press Q to quit, press ENTER to play again.");
 }
 
 void Game::updateSafetyVolume() {
@@ -249,7 +250,7 @@ void Game::updateSafetyVolume() {
 void Game::showTutorialMessage() {
     if (_tutorial) {
         if (TUTORIAL_MESSAGES.count({_level, _row})) {
-            std::cout << TUTORIAL_MESSAGES.at({_level, _row}) << std::endl;
+            IO::println(TUTORIAL_MESSAGES.at({_level, _row}));
         }
     }
 }

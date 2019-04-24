@@ -24,6 +24,7 @@
 #include <irrKlang.h>
 
 #include "Game.h"
+#include "IO.h"
 
 using namespace irrklang;
 using namespace std::chrono;
@@ -48,6 +49,7 @@ int main(int argc, const char **argv) {
     bool tutorial = (argc > 1) && (std::string(argv[1]) == "-t");
 
     ISoundEngine *engine = createIrrKlangDevice();
+    IO::init();
 
     if (!engine) {
         // There was an error starting up the engine
@@ -75,13 +77,11 @@ int main(int argc, const char **argv) {
 
         sleepSeconds(SLEEP_TIME);
 
-        if (kbhit()) {
-            int key = getch();
-            if (key == ENTER_KEY) {
-                action = true;
-            } else if (key == 'q') {
-                break;
-            }
+        char c = IO::keyPressed();
+        if (c == ENTER_KEY) {
+            action = true;
+        } else if (c == 'q') {
+            break;
         }
     }
 
